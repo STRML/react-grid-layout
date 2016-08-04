@@ -67,6 +67,8 @@ export default class ReactGridLayout extends React.Component {
     margin: PropTypes.arrayOf(PropTypes.number),
     // Rows have a static height, but you can change this based on breakpoints if you like
     rowHeight: PropTypes.number,
+    // Alternatively you can set the row height as percent of the column width. This overwrites the rowHeight property.
+    rowHeightPercent: PropTypes.number,
     // Default Infinity, but you can specify a max here if you like.
     // Note that this isn't fully fleshed out and won't error if you specify a layout that
     // extends beyond the row capacity. It will, however, not allow users to drag/resize
@@ -194,7 +196,14 @@ export default class ReactGridLayout extends React.Component {
    */
   containerHeight() {
     if (!this.props.autoSize) return;
-    return bottom(this.state.layout) * (this.props.rowHeight + this.props.margin[1]) + this.props.margin[1] + 'px';
+    var rowHeight;
+    if (this.props.rowHeightPercent) {
+      var colWidth = (this.props.width - (this.props.margin[0] * (this.props.cols + 1))) / this.props.cols;
+      rowHeight = colWidth * this.props.rowHeightPercent / 100;
+    } else {
+      rowHeight = this.props.rowHeight;
+    }
+    return bottom(this.state.layout) * (rowHeight + this.props.margin[1]) + this.props.margin[1] + 'px';
   }
 
   /**
@@ -327,7 +336,7 @@ export default class ReactGridLayout extends React.Component {
   placeholder(): ?React.Element<any> {
     const {activeDrag} = this.state;
     if (!activeDrag) return null;
-    const {width, cols, margin, rowHeight, maxRows, useCSSTransforms} = this.props;
+    const {width, cols, margin, rowHeight, rowHeightPercent, maxRows, useCSSTransforms} = this.props;
 
     // {...this.state.activeDrag} is pretty slow, actually
     return (
@@ -343,6 +352,7 @@ export default class ReactGridLayout extends React.Component {
         margin={margin}
         maxRows={maxRows}
         rowHeight={rowHeight}
+        rowHeightPercent={rowHeightPercent}
         isDraggable={false}
         isResizable={false}
         useCSSTransforms={useCSSTransforms}>
@@ -360,7 +370,7 @@ export default class ReactGridLayout extends React.Component {
     if (!child.key) return;
     const l = getLayoutItem(this.state.layout, child.key);
     if (!l) return null;
-    const {width, cols, margin, rowHeight, maxRows, isDraggable, isResizable,
+    const {width, cols, margin, rowHeight, rowHeightPercent, maxRows, isDraggable, isResizable,
            useCSSTransforms, draggableCancel, draggableHandle} = this.props;
     const {mounted} = this.state;
 
@@ -375,6 +385,7 @@ export default class ReactGridLayout extends React.Component {
         margin={margin}
         maxRows={maxRows}
         rowHeight={rowHeight}
+        rowHeightPercent={rowHeightPercent}
         cancel={draggableCancel}
         handle={draggableHandle}
         onDragStop={this.onDragStop}

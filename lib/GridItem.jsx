@@ -24,7 +24,8 @@ export default class GridItem extends React.Component {
     // General grid attributes
     cols: PropTypes.number.isRequired,
     containerWidth: PropTypes.number.isRequired,
-    rowHeight: PropTypes.number.isRequired,
+    rowHeight: PropTypes.number,
+    rowHeightPercent: PropTypes.number,
     margin: PropTypes.array.isRequired,
     maxRows: PropTypes.number.isRequired,
 
@@ -117,8 +118,14 @@ export default class GridItem extends React.Component {
    * @return {Object}                Object containing coords.
    */
   calcPosition(x: number, y: number, w: number, h: number, state: ?Object): Position {
-    const {margin, rowHeight} = this.props;
+    const {margin, rowHeightPercent} = this.props;
     const colWidth = this.calcColWidth();
+    var rowHeight;
+    if (rowHeightPercent) {
+      rowHeight = colWidth * rowHeightPercent / 100;
+    } else {
+      rowHeight = this.props.rowHeight;
+    }
 
     const out = {
       left: Math.round(colWidth * x + (x + 1) * margin[0]),
