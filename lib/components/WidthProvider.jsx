@@ -44,7 +44,14 @@ export default (ComposedComponent: ReactClass): ReactClass => class extends Reac
 
   onWindowResize = (_event: Event, cb: ?Function) => {
     const node = ReactDOM.findDOMNode(this);
-    this.setState({width: node.offsetWidth}, cb);
+    
+    let padLeft = window.getComputedStyle(node, null).getPropertyValue('padding-left') || 0;
+    padLeft = parseInt(padLeft) || 0;
+
+    let padRight = window.getComputedStyle(node, null).getPropertyValue('padding-right') || 0;
+    padRight = parseInt(padRight) || 0;
+    
+    this.setState({width: node.offsetWidth - padLeft - padRight}, cb);
   }
 
   render() {
