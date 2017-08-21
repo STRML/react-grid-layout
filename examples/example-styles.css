@@ -44,6 +44,10 @@ body {
   margin: auto;
   height: 24px;
 }
+.react-grid-item .text.viewport-related {
+    font-size: 2vw;
+    height: 2vw;
+}
 .react-grid-item .minMax {
   font-size: 12px;
 }

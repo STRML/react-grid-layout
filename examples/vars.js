@@ -107,4 +107,20 @@ module.exports = [
       'property `verticalCompact` to `false` to achieve this effect.'
     ]
   },
+  {
+    title: 'Viewport related sizing',
+    source: 'viewport-related',
+    paragraphs: [
+      'This demo shows that the size of grid elements is related to the viewport width.',
+      'Resize the browser window and the sizes of elements are resized in in relation to it!'
+    ]
+  },
+  {
+    title: 'Responsive viewport related sizing',
+    source: 'viewport-related-responsive',
+    paragraphs: [
+      'This demo shows that the size of grid elements is related to the viewport width in a responsive way',
+      'Resize the browser window and the sizes of elements are resized in in relation to it along with relayouting when repsonsive breakpoints are changing!'
+    ]
+  }
 ];
