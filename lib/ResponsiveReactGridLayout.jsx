@@ -169,7 +169,7 @@ export default class ResponsiveReactGridLayout extends React.Component<Props<>, 
                                                   lastBreakpoint, newCols, compactType);
 
       // This adds missing items.
-      layout = synchronizeLayoutWithChildren(layout, nextProps.children, newCols, compactType);
+      layout = synchronizeLayoutWithChildren(layout, nextProps.children, newCols, Infinity, compactType);
 
       // Store the new layout.
       layouts[newBreakpoint] = layout;

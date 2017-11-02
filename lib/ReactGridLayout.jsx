@@ -3,7 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import isEqual from 'lodash.isequal';
 import classNames from 'classnames';
-import {autoBindHandlers, bottom, childrenEqual, cloneLayoutItem, compact, getLayoutItem, moveElement,
+import {autoBindHandlers, bottom, childrenEqual, cloneLayoutItem, cloneLayout, compact, getLayoutItem, moveElement,
   synchronizeLayoutWithChildren, validateLayout, getFirstCollision} from './utils';
 import GridItem from './GridItem';
 import type {ChildrenArray as ReactChildrenArray, Element as ReactElement} from 'react';
@@ -112,11 +112,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     containerPadding: PropTypes.arrayOf(PropTypes.number),
     // Rows have a static height, but you can change this based on breakpoints if you like
     rowHeight: PropTypes.number,
-    // Default Infinity, but you can specify a max here if you like.
-    // Note that this isn't fully fleshed out and won't error if you specify a layout that
-    // extends beyond the row capacity. It will, however, not allow users to drag/resize
-    // an item past the barrier. They can push items beyond the barrier, though.
-    // Intentionally not documented for this reason.
+    // Maximum number of rows
     maxRows: PropTypes.number,
 
     //
@@ -196,7 +192,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     activeDrag: null,
     layout: synchronizeLayoutWithChildren(this.props.layout, this.props.children, this.props.cols,
                                           // Legacy support for verticalCompact: false
-                                          this.compactType()),
+                                          this.props.maxRows, this.compactType()),
     mounted: false,
     oldDragItem: null,
     oldLayout: null,
@@ -233,7 +229,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     // We need to regenerate the layout.
     if (newLayoutBase) {
       const newLayout = synchronizeLayoutWithChildren(newLayoutBase, nextProps.children,
-                                                      nextProps.cols, this.compactType(nextProps));
+                                                      nextProps.cols, nextProps.maxRows, this.compactType(nextProps));
       const oldLayout = this.state.layout;
       this.setState({layout: newLayout});
       this.onLayoutMaybeChanged(newLayout, oldLayout);
@@ -269,7 +265,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     var l = getLayoutItem(layout, i);
     if (!l) return;
 
-    this.setState({oldDragItem: cloneLayoutItem(l), oldLayout: this.state.layout});
+    this.setState({oldDragItem: cloneLayoutItem(l), oldLayout: layout});
 
     this.props.onDragStart(layout, l, l, null, e, node);
   }
@@ -285,7 +281,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   onDrag(i:string, x:number, y:number, {e, node}: GridDragEvent) {
     const {oldDragItem} = this.state;
     let {layout} = this.state;
-    const {cols} = this.props;
+    const {cols, maxRows} = this.props;
     var l = getLayoutItem(layout, i);
     if (!l) return;
 
@@ -296,12 +292,17 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     // Move the element to the dragged location.
     const isUserAction = true;
+
+    // Revert to oldLayout if compact returns null (i.e. maxRows exceeded)
+    const oldLayout = cloneLayout(layout);
     layout = moveElement(layout, l, x, y, isUserAction, this.props.preventCollision, this.compactType(), cols);
 
     this.props.onDrag(layout, oldDragItem, l, placeholder, e, node);
 
+    const newLayout = compact(layout, this.compactType(), cols, maxRows);
     this.setState({
-      layout: compact(layout, this.compactType(), cols),
+      layout: newLayout ? newLayout : oldLayout,
+      oldLayout: newLayout,
       activeDrag: placeholder
     });
   }
@@ -317,27 +318,31 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   onDragStop(i:string, x:number, y:number, {e, node}: GridDragEvent) {
     const {oldDragItem} = this.state;
     let {layout} = this.state;
-    const {cols, preventCollision} = this.props;
+    const {cols, maxRows, preventCollision} = this.props;
     const l = getLayoutItem(layout, i);
     if (!l) return;
 
     // Move the element here
     const isUserAction = true;
+
+    // Revert to oldLayout if compact returns null (i.e. maxRows exceeded)
+    const oldLayout = cloneLayout(layout);
     layout = moveElement(layout, l, x, y, isUserAction, preventCollision, this.compactType(), cols);
 
     this.props.onDragStop(layout, oldDragItem, l, null, e, node);
 
     // Set state
-    const newLayout = compact(layout, this.compactType(), cols);
-    const {oldLayout} = this.state;
+    const newLayout = compact(layout, this.compactType(), cols, maxRows);
     this.setState({
       activeDrag: null,
-      layout: newLayout,
+      layout: newLayout ? newLayout : oldLayout,
       oldDragItem: null,
       oldLayout: null,
     });
 
-    this.onLayoutMaybeChanged(newLayout, oldLayout);
+    if (newLayout) {
+      this.onLayoutMaybeChanged(newLayout, oldLayout);
+    }
   }
 
   onLayoutMaybeChanged(newLayout: Layout, oldLayout: ?Layout) {
@@ -362,7 +367,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
   onResize(i:string, w:number, h:number, {e, node}: GridResizeEvent) {
     const {layout, oldResizeItem} = this.state;
-    const {cols, preventCollision} = this.props;
+    const {cols, maxRows, preventCollision} = this.props;
     var l = getLayoutItem(layout, i);
     if (!l) return;
 
@@ -371,42 +376,63 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       return;
     }
 
+    // Revert to oldLayout if compact returns null (i.e. maxRows exceeded)
+    const oldLayout = cloneLayout(layout);
+
     // Set new width and height.
     l.w = w;
     l.h = h;
+    
+    this.props.onResize(layout, oldResizeItem, l, placeholder, e, node);
+    
+    let newLayout = compact(layout, this.compactType(), cols, maxRows);
 
     // Create placeholder element (display only)
+    const placeholderL = newLayout ? getLayoutItem(newLayout, i) : getLayoutItem(oldLayout, i);
+    
+    if (!placeholderL) return;
     var placeholder = {
-      w: w, h: h, x: l.x, y: l.y, static: true, i: i
+      w: placeholderL.w, h: placeholderL.h, x: placeholderL.x, y: placeholderL.y, static: true, i: i
     };
-
-    this.props.onResize(layout, oldResizeItem, l, placeholder, e, node);
-
-    // Re-compact the layout and set the drag placeholder.
+    
+    if (newLayout) {
+      for (let i = 0, len = newLayout.length; i < len; i++) {
+        let l = newLayout[i];
+        if (l.h + l.y > maxRows) {
+          newLayout = null;
+          break;
+        }
+      }
+    }
+      
     this.setState({
-      layout: compact(layout, this.compactType(), cols),
+      layout: newLayout ? newLayout : oldLayout,
       activeDrag: placeholder
     });
   }
 
   onResizeStop(i:string, w:number, h:number, {e, node}: GridResizeEvent) {
     const {layout, oldResizeItem} = this.state;
-    const {cols} = this.props;
+    const {cols, maxRows} = this.props;
     var l = getLayoutItem(layout, i);
+  
+    // Revert to oldLayout if compact returns null (i.e. maxRows exceeded)
+    const oldLayout = cloneLayout(layout);
 
     this.props.onResizeStop(layout, oldResizeItem, l, null, e, node);
-
+   
     // Set state
-    const newLayout = compact(layout, this.compactType(), cols);
-    const {oldLayout} = this.state;
+    const newLayout = compact(layout, this.compactType(), cols, maxRows);
     this.setState({
       activeDrag: null,
-      layout: newLayout,
+      layout: newLayout ? newLayout : oldLayout,
       oldResizeItem: null,
       oldLayout: null
     });
 
-    this.onLayoutMaybeChanged(newLayout, oldLayout);
+    if (newLayout) {
+      this.onLayoutMaybeChanged(newLayout, oldLayout);
+    }
   }
 
   /**
