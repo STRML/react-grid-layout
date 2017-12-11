@@ -19,7 +19,6 @@ type State = {
  */
 type ProviderT = (ComposedComponent: ReactComponentType<any>) => ReactComponentType<any>;
 const WidthProvider: ProviderT = (ComposedComponent) => class extends React.Component<Props, State> {
-
   static defaultProps = {
     measureBeforeMount: false
   };
@@ -35,26 +34,33 @@ const WidthProvider: ProviderT = (ComposedComponent) => class extends React.Comp
   };
 
   mounted: boolean = false;
+  iframe: ?HTMLIFrameElement = null;
 
   componentDidMount() {
     this.mounted = true;
 
-    window.addEventListener('resize', this.onWindowResize);
+    this.iframe.contentWindow.addEventListener('resize', this.onIframeResize);
     // Call to properly set the breakpoint and resize the elements.
     // Note that if you're doing a full-width element, this can get a little wonky if a scrollbar
     // appears because of the grid. In that case, fire your own resize event, or set `overflow: scroll` on your body.
-    this.onWindowResize();
+    this.onIframeResize();
   }
 
   componentWillUnmount() {
     this.mounted = false;
-    window.removeEventListener('resize', this.onWindowResize);
+    this.iframe.contentWindow.removeEventListener('resize', this.onIframeResize);
   }
 
-  onWindowResize = (_event: ?Event) => {
+  onIframeResize = (_event: ?Event) => {
     if (!this.mounted) return;
     const node = ReactDOM.findDOMNode(this); // Flow casts this to Text | Element
-    if (node instanceof HTMLElement) this.setState({width: node.offsetWidth});
+    if (node instanceof HTMLElement) {
+      this.setState({width: this.iframe.offsetWidth});
+    }
+  }
+
+  saveIframe = (iframe: HTMLIFrameElement) => {
+    this.iframe = iframe;
   }
 
   render() {
@@ -62,7 +68,22 @@ const WidthProvider: ProviderT = (ComposedComponent) => class extends React.Comp
       return <div className={this.props.className} style={this.props.style} />;
     }
 
-    return <ComposedComponent {...this.props} {...this.state} />;
+    return (
+      <span>
+        <iframe ref={this.saveIframe} style={{  
+          height: 0,
+          margin: 0,
+          padding: 0,
+          opacity: 0,
+          overflow: 'hidden',
+          borderWidth: 0,
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          width: '100%'
+        }} />
+        <ComposedComponent {...this.props} {...this.state} />
+      </span>
+    );
   }
 };
 
