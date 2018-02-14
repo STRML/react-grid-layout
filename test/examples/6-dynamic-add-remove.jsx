@@ -1,6 +1,8 @@
 import React from "react";
-import { WidthProvider, Responsive } from "react-grid-layout";
+import { WidthProvider, Responsive, createDragApiRef } from "react-grid-layout";
 import _ from "lodash";
+import Draggable from "react-draggable";
+
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
 /**
@@ -27,11 +29,16 @@ class AddRemoveLayout extends React.PureComponent {
           add: i === (list.length - 1).toString()
         };
       }),
-      newCounter: 0
+      newCounter: 0,
+      placeholderPosition: { x: 0, y: 0 }
     };
+    this.dragApi = createDragApiRef();
 
     this.onAddItem = this.onAddItem.bind(this);
     this.onBreakpointChange = this.onBreakpointChange.bind(this);
+    this.onLayoutChange = this.onLayoutChange.bind(this);
+    this.dragPlaceholder = this.dragPlaceholder.bind(this);
+    this.stopPlaceholder = this.stopPlaceholder.bind(this);
   }
 
   createElement(el) {
@@ -83,6 +90,13 @@ class AddRemoveLayout extends React.PureComponent {
     });
   }
 
+  onLayoutChange(layout) {
+    console.log("layout changed", layout);
+    this.setState({
+      items: layout
+    });
+  }
+
   // We're using the cols coming back from this to calculate where to add new items.
   onBreakpointChange(breakpoint, cols) {
     this.setState({
@@ -91,27 +105,78 @@ class AddRemoveLayout extends React.PureComponent {
     });
   }
 
-  onLayoutChange(layout) {
-    this.props.onLayoutChange(layout);
-    this.setState({ layout: layout });
-  }
-
   onRemoveItem(i) {
     console.log("removing", i);
     this.setState({ items: _.reject(this.state.items, { i: i }) });
+  }
+
+  dragPlaceholder(event, { node, newPosition }) {
+    if (this.dragApi.value) {
+      const containerRect = this.container.getBoundingClientRect();
+      const left = event.clientX - containerRect.left;
+      const top = event.clientY - containerRect.top;
+      if (left < 0 || top < 0) {
+        this.dragApi.value.dragOut({
+          event,
+          position: {
+            left,
+            top
+          }
+        });
+      } else {
+        this.dragApi.value.dragIn({
+          i: "n" + this.state.newCounter,
+          w: 2,
+          h: 2,
+          event,
+          node,
+          position: {
+            left,
+            top
+          }
+        });
+      }
+    }
+  }
+
+  stopPlaceholder(event, { node }) {
+    if (this.dragApi.value) {
+      const containerRect = this.container.getBoundingClientRect();
+      this.dragApi.value.stop({
+        event,
+        position: {
+          left: event.clientX - containerRect.left,
+          top: event.clientY - containerRect.top
+        }
+      });
+      this.setState(state => ({
+        newCounter: state.newCounter + 1
+      }));
+    }
   }
 
   render() {
     return (
       <div>
         <button onClick={this.onAddItem}>Add Item</button>
-        <ResponsiveReactGridLayout
-          onLayoutChange={this.onLayoutChange}
-          onBreakpointChange={this.onBreakpointChange}
-          {...this.props}
+        <Draggable
+          position={this.state.placeholderPosition}
+          onDrag={this.dragPlaceholder}
+          onStop={this.stopPlaceholder}
         >
-          {_.map(this.state.items, el => this.createElement(el))}
-        </ResponsiveReactGridLayout>
+          <button style={{ position: "relative", zIndex: 1000 }}>
+            Drag external Item
+          </button>
+        </Draggable>
+        <div ref={node => (this.container = node)}>
+          <ResponsiveReactGridLayout
+            dragApiRef={this.dragApi}
+            onLayoutChange={this.onLayoutChange}
+            onBreakpointChange={this.onBreakpointChange}
+          >
+            {_.map(this.state.items, el => this.createElement(el))}
+          </ResponsiveReactGridLayout>
+        </div>
       </div>
     );
   }

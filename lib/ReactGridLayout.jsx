@@ -14,9 +14,10 @@ import {
   synchronizeLayoutWithChildren,
   validateLayout,
   getFirstCollision,
-  noop
+  noop,
+  createDragApiRef
 } from "./utils";
-import GridItem from "./GridItem";
+import GridItem, { calcXY } from "./GridItem";
 import type {
   ChildrenArray as ReactChildrenArray,
   Element as ReactElement
@@ -29,7 +30,8 @@ import type {
   GridResizeEvent,
   GridDragEvent,
   Layout,
-  LayoutItem
+  LayoutItem,
+  DragApiRefObject
 } from "./utils";
 
 type State = {
@@ -60,6 +62,7 @@ export type Props = {
   isResizable: boolean,
   preventCollision: boolean,
   useCSSTransforms: boolean,
+  dragApiRef: DragApiRefObject,
 
   // Callbacks
   onLayoutChange: Layout => void,
@@ -217,6 +220,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     verticalCompact: true,
     compactType: "vertical",
     preventCollision: false,
+    dragApiRef: createDragApiRef(),
     onLayoutChange: noop,
     onDragStart: noop,
     onDrag: noop,
@@ -254,6 +258,71 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   }
 
   componentDidMount() {
+    let dragInfo = null;
+
+    this.props.dragApiRef.value = {
+      dragIn: ({ i, w, h, node, event, position }) => {
+        dragInfo = { i, w, h, node };
+        const { layout } = this.state;
+        const { margin, containerPadding } = this.props;
+        const { x, y } = calcXY(position.top, position.left, {
+          containerWidth: this.props.width,
+          cols: this.props.cols,
+          margin,
+          containerPadding: containerPadding || margin,
+          rowHeight: this.props.rowHeight,
+          maxRows: this.props.maxRows,
+          w,
+          h
+        });
+        if (!this.state.activeDrag) {
+          const l = { i, w, h, x, y };
+          this.setState({
+            oldDragItem: l,
+            oldLayout: layout,
+            layout: [...this.state.layout, l],
+            activeDrag: l
+          });
+          this.props.onDragStart(layout, l, l, null, event, node);
+        } else {
+          this.onDrag(i, x, y, { e: event, node, newPosition: position });
+        }
+      },
+
+      dragOut: ({ event }) => {
+        if (dragInfo) {
+          const { i } = dragInfo;
+          this.setState((state, props) => ({
+            layout: compact(
+              state.layout.filter(d => d.i !== i),
+              this.compactType(),
+              props.cols
+            ),
+            activeDrag: null
+          }));
+        }
+      },
+
+      stop: ({ event, position }) => {
+        if (dragInfo) {
+          const { i, w, h, node } = dragInfo;
+          const { margin, containerPadding } = this.props;
+          const { x, y } = calcXY(position.top, position.left, {
+            containerWidth: this.props.width,
+            cols: this.props.cols,
+            margin,
+            containerPadding: containerPadding || margin,
+            rowHeight: this.props.rowHeight,
+            maxRows: this.props.maxRows,
+            w,
+            h
+          });
+          this.onDragStop(i, x, y, { e: event, node, newPosition: position });
+          dragInfo = null;
+        }
+      }
+    };
+
     this.setState({ mounted: true });
     // Possibly call back with layout on mount. This should be done after correcting the layout width
     // to ensure we don't rerender with the wrong width.
@@ -351,12 +420,12 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     // Create placeholder (display only)
     var placeholder = {
+      i: i,
       w: l.w,
       h: l.h,
       x: l.x,
       y: l.y,
-      placeholder: true,
-      i: i
+      placeholder: true
     };
 
     // Move the element to the dragged location.
@@ -433,6 +502,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   onResizeStart(i: string, w: number, h: number, { e, node }: GridResizeEvent) {
     const { layout } = this.state;
     var l = getLayoutItem(layout, i);
+    const placeholder = this.state.activeDrag;
     if (!l) return;
 
     this.setState({
