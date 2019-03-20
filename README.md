@@ -344,6 +344,15 @@ cols: ?Object = {lg: 12, md: 10, sm: 6, xs: 4, xxs: 2},
 layouts: {[key: $Keys<breakpoints>]: Layout}
 
 //
+// Flags
+//
+
+// Define the target element which width is measured for breakpoints handler
+// false - get width of the layout component
+// true - get width of the viewport (window)
+breakpointFromViewport: ?boolean = false
+
+//
 // Callbacks
 //
 

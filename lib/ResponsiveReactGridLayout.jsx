@@ -35,6 +35,8 @@ type Props<Breakpoint: string = string> = {
   cols: { [key: Breakpoint]: number },
   layouts: { [key: Breakpoint]: Layout },
   width: number,
+  viewportWidth: number,
+  breakpointFromViewport: boolean,
 
   // Callbacks
   onBreakpointChange: (Breakpoint, cols: number) => void,
@@ -91,6 +93,12 @@ export default class ResponsiveReactGridLayout extends React.Component<
     // Required in this propTypes stanza because generateInitialState() will fail without it.
     width: PropTypes.number.isRequired,
 
+    // The width of the viewport
+    viewportWidth: PropTypes.number,
+
+    // Take width of viewport to handle correct breakpoint
+    breakpointFromViewport: PropTypes.bool.isRequired,
+
     //
     // Callbacks
     //
@@ -118,8 +126,16 @@ export default class ResponsiveReactGridLayout extends React.Component<
   state = this.generateInitialState();
 
   generateInitialState(): State {
-    const { width, breakpoints, layouts, cols } = this.props;
-    const breakpoint = getBreakpointFromWidth(breakpoints, width);
+    const {
+      breakpointFromViewport,
+      breakpoints,
+      layouts,
+      cols,
+      viewportWidth,
+      width
+    } = this.props;
+    const widthForBreakpoint = breakpointFromViewport ? viewportWidth : width;
+    const breakpoint = getBreakpointFromWidth(breakpoints, widthForBreakpoint);
     const colNo = getColsFromBreakpoint(breakpoint, cols);
     // verticalCompact compatibility, now deprecated
     const compactType =
@@ -146,6 +162,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
     // Allow parent to set width or breakpoint directly.
     if (
       nextProps.width != this.props.width ||
+      nextProps.viewportWidth != this.props.viewportWidth ||
       nextProps.breakpoint !== this.props.breakpoint ||
       !isEqual(nextProps.breakpoints, this.props.breakpoints) ||
       !isEqual(nextProps.cols, this.props.cols)
@@ -182,10 +199,19 @@ export default class ResponsiveReactGridLayout extends React.Component<
    * Width changes are necessary to figure out the widget widths.
    */
   onWidthChange(nextProps: Props<*>) {
-    const { breakpoints, cols, layouts, compactType } = nextProps;
+    const {
+      breakpointFromViewport,
+      breakpoints,
+      cols,
+      layouts,
+      compactType,
+      viewportWidth,
+      width
+    } = nextProps;
+    const widthForBreakpoint = breakpointFromViewport ? viewportWidth : width;
     const newBreakpoint =
       nextProps.breakpoint ||
-      getBreakpointFromWidth(nextProps.breakpoints, nextProps.width);
+      getBreakpointFromWidth(nextProps.breakpoints, widthForBreakpoint);
 
     const lastBreakpoint = this.state.breakpoint;
     const newCols: number = getColsFromBreakpoint(newBreakpoint, cols);

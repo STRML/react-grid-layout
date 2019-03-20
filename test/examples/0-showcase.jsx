@@ -16,12 +16,15 @@ class ShowcaseLayout extends React.Component {
     currentBreakpoint: "lg",
     compactType: "vertical",
     mounted: false,
-    layouts: { lg: this.props.initialLayout }
+    layouts: { lg: this.props.initialLayout },
+    breakpointFromViewport: false
   };
 
   componentDidMount() {
     this.setState({ mounted: true });
   }
+
+  rglComponent = React.createRef();
 
   generateDOM() {
     return _.map(this.state.layouts.lg, function(l, i) {
@@ -53,9 +56,16 @@ class ShowcaseLayout extends React.Component {
     const compactType =
       oldCompactType === "horizontal"
         ? "vertical"
-        : oldCompactType === "vertical" ? null : "horizontal";
+        : oldCompactType === "vertical"
+        ? null
+        : "horizontal";
     this.setState({ compactType });
   };
+
+  onBreakpointWidthTargetChange = () =>
+    this.setState({
+      breakpointFromViewport: !this.state.breakpointFromViewport
+    });
 
   onLayoutChange = (layout, layouts) => {
     this.props.onLayoutChange(layout, layouts);
@@ -68,24 +78,38 @@ class ShowcaseLayout extends React.Component {
   };
 
   render() {
+    let widthForBreakpoint = window.innerWidth;
+    if (!this.state.breakpointFromViewport && this.rglComponent.current) {
+      widthForBreakpoint = this.rglComponent.current.state.width;
+    }
     return (
       <div>
         <div>
-          Current Breakpoint: {this.state.currentBreakpoint} ({
-            this.props.cols[this.state.currentBreakpoint]
-          }{" "}
-          columns)
+          Current Breakpoint: {this.state.currentBreakpoint} (
+          {this.props.cols[this.state.currentBreakpoint]} columns)
         </div>
         <div>
           Compaction type:{" "}
           {_.capitalize(this.state.compactType) || "No Compaction"}
         </div>
+        <div>
+          Width for breakpoint is getting from:{" "}
+          {this.state.breakpointFromViewport
+            ? "Viewport - window"
+            : "Component"}
+        </div>
+        <div>Current breakpoint width: {widthForBreakpoint}</div>
         <button onClick={this.onNewLayout}>Generate New Layout</button>
         <button onClick={this.onCompactTypeChange}>
           Change Compaction Type
         </button>
+        <button onClick={this.onBreakpointWidthTargetChange}>
+          Change breakpoint width target element
+        </button>
+
         <ResponsiveReactGridLayout
           {...this.props}
+          ref={this.rglComponent}
           layouts={this.state.layouts}
           onBreakpointChange={this.onBreakpointChange}
           onLayoutChange={this.onLayoutChange}
@@ -96,6 +120,7 @@ class ShowcaseLayout extends React.Component {
           useCSSTransforms={this.state.mounted}
           compactType={this.state.compactType}
           preventCollision={!this.state.compactType}
+          breakpointFromViewport={this.state.breakpointFromViewport}
         >
           {this.generateDOM()}
         </ResponsiveReactGridLayout>
