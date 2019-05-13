@@ -32,6 +32,10 @@
   user-select: none;
 }
 
+.react-grid-item.react-resizable-disabled > .react-resizable-handle {
+  visibility: hidden;
+}
+
 .react-grid-item > .react-resizable-handle {
   position: absolute;
   width: 20px;

@@ -58,6 +58,7 @@ export type Props = {
   maxRows: number,
   isDraggable: boolean,
   isResizable: boolean,
+  isEditable: boolean,
   preventCollision: boolean,
   useCSSTransforms: boolean,
 
@@ -150,6 +151,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     //
     isDraggable: PropTypes.bool,
     isResizable: PropTypes.bool,
+    isEditable: PropTypes.bool,
     // If true, grid items won't change position when being dragged over.
     preventCollision: PropTypes.bool,
     // Use CSS transforms instead of top/left
@@ -213,6 +215,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     margin: [10, 10],
     isDraggable: true,
     isResizable: true,
+    isEditable: true,
     useCSSTransforms: true,
     verticalCompact: true,
     compactType: "vertical",
@@ -577,6 +580,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       maxRows,
       isDraggable,
       isResizable,
+      isEditable,
       useCSSTransforms,
       draggableCancel,
       draggableHandle
@@ -589,6 +593,9 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     );
     const resizable = Boolean(
       !l.static && isResizable && (l.isResizable || l.isResizable == null)
+    );
+    const editable = Boolean(
+      !l.static && isEditable && (l.isEditable || l.isEditable == null)
     );
 
     return (
@@ -609,6 +616,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         onResizeStop={this.onResizeStop}
         isDraggable={draggable}
         isResizable={resizable}
+        isEditable={editable}
         useCSSTransforms={useCSSTransforms && mounted}
         usePercentages={!mounted}
         w={l.w}

@@ -319,6 +319,7 @@ export default class GridItem extends React.Component<Props, State> {
           ".react-resizable-handle" +
           (this.props.cancel ? "," + this.props.cancel : "")
         }
+        disabled={!this.props.isEditable}
       >
         {child}
       </DraggableCore>
@@ -335,7 +336,7 @@ export default class GridItem extends React.Component<Props, State> {
     child: ReactElement<any>,
     position: Position
   ): ReactElement<any> {
-    const { cols, x, minW, minH, maxW, maxH } = this.props;
+    const { cols, x, minW, minH, maxW, maxH, isEditable } = this.props;
 
     // This is the max possible width - doesn't go to infinity because of the width of the window
     const maxWidth = this.calcPosition(0, 0, cols - x, 0).width;
@@ -357,6 +358,10 @@ export default class GridItem extends React.Component<Props, State> {
         onResizeStop={this.onResizeHandler("onResizeStop")}
         onResizeStart={this.onResizeHandler("onResizeStart")}
         onResize={this.onResizeHandler("onResize")}
+        className={isEditable ? "" : "react-resizable-disabled"}
+        draggableOpts={{
+          disabled: !isEditable
+        }}
       >
         {child}
       </Resizable>
