@@ -41,6 +41,7 @@ type Props = {
   static?: boolean,
   useCSSTransforms?: boolean,
   usePercentages?: boolean,
+  resizableProps?: Object,
 
   className: string,
   style?: Object,
@@ -136,6 +137,8 @@ export default class GridItem extends React.Component<Props, State> {
 
     // Use CSS transforms instead of top/left
     useCSSTransforms: PropTypes.bool.isRequired,
+
+    resizableProps: PropTypes.object.isRequired,
 
     // Others
     className: PropTypes.string,
@@ -329,11 +332,13 @@ export default class GridItem extends React.Component<Props, State> {
    * Mix a Resizable instance into a child.
    * @param  {Element} child    Child element.
    * @param  {Object} position  Position object (pixel values)
+   * @param {Object} [resizableProps] Additional props to React-Resizable
    * @return {Element}          Child wrapped in Resizable.
    */
   mixinResizable(
     child: ReactElement<any>,
-    position: Position
+    position: Position,
+    resizableProps?: Object
   ): ReactElement<any> {
     const { cols, x, minW, minH, maxW, maxH } = this.props;
 
@@ -357,6 +362,7 @@ export default class GridItem extends React.Component<Props, State> {
         onResizeStop={this.onResizeHandler("onResizeStop")}
         onResizeStart={this.onResizeHandler("onResizeStart")}
         onResize={this.onResizeHandler("onResize")}
+        {...resizableProps}
       >
         {child}
       </Resizable>
@@ -462,7 +468,8 @@ export default class GridItem extends React.Component<Props, State> {
       h,
       isDraggable,
       isResizable,
-      useCSSTransforms
+      useCSSTransforms,
+      resizableProps
     } = this.props;
 
     const pos = this.calcPosition(x, y, w, h, this.state);
@@ -491,7 +498,8 @@ export default class GridItem extends React.Component<Props, State> {
     });
 
     // Resizable support. This is usually on but the user can toggle it off.
-    if (isResizable) newChild = this.mixinResizable(newChild, pos);
+    if (isResizable)
+      newChild = this.mixinResizable(newChild, pos, resizableProps);
 
     // Draggable support. This is always on, except for with placeholders.
     if (isDraggable) newChild = this.mixinDraggable(newChild);
