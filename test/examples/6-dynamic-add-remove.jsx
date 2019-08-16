@@ -3,6 +3,18 @@ import { WidthProvider, Responsive } from "react-grid-layout";
 import _ from "lodash";
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
+const generateLayout = () =>
+  _.map(_.range(0, 7), function(item, i) {
+    const y = Math.ceil(Math.random() * 4) + 1;
+    return {
+      x: (_.random(0, 5) * 2) % 12,
+      y: Math.floor(i / 6) * y,
+      w: 2,
+      h: 2,
+      i: i.toString()
+    };
+  });
+
 /**
  * This layout demonstrates how to use a grid with a dynamic number of elements.
  */
@@ -10,95 +22,97 @@ class AddRemoveLayout extends React.PureComponent {
   static defaultProps = {
     className: "layout",
     cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
-    rowHeight: 100
+    rowHeight: 100,
+    initialLayout: generateLayout()
   };
 
   constructor(props) {
     super(props);
 
     this.state = {
-      items: [0, 1, 2, 3, 4].map(function(i, key, list) {
-        return {
-          i: i.toString(),
-          x: i * 2,
-          y: 0,
-          w: 2,
-          h: 2,
-          add: i === (list.length - 1).toString()
-        };
-      }),
-      newCounter: 0
+      newCounter: 0,
+      currentBreakpoint: "lg",
+      layouts: { lg: this.props.initialLayout }
     };
 
     this.onAddItem = this.onAddItem.bind(this);
     this.onBreakpointChange = this.onBreakpointChange.bind(this);
+    this.onLayoutChange = this.onLayoutChange.bind(this);
   }
 
-  createElement(el) {
-    const removeStyle = {
-      position: "absolute",
-      right: "2px",
-      top: 0,
-      cursor: "pointer"
-    };
-    const i = el.add ? "+" : el.i;
-    return (
-      <div key={i} data-grid={el}>
-        {el.add ? (
-          <span
-            className="add text"
-            onClick={this.onAddItem}
-            title="You can add an item by clicking here, too."
+  generateDOM() {
+    return _.map(this.state.layouts[this.state.currentBreakpoint], l => {
+      return (
+        <div key={l.i} className={l.static ? "static" : ""}>
+          <div
+            className="hide-button"
+            onClick={this.onRemoveItem.bind(this, l)}
           >
-            Add +
-          </span>
-        ) : (
-          <span className="text">{i}</span>
-        )}
-        <span
-          className="remove"
-          style={removeStyle}
-          onClick={this.onRemoveItem.bind(this, i)}
-        >
-          x
-        </span>
-      </div>
-    );
+            &times;
+          </div>
+          {l.static ? (
+            <span
+              className="text"
+              title="This item is static and cannot be removed or resized."
+            >
+              Static - {l.i}
+            </span>
+          ) : (
+            <span className="text">{l.i}</span>
+          )}
+        </div>
+      );
+    });
   }
 
   onAddItem() {
     /*eslint no-console: 0*/
     console.log("adding", "n" + this.state.newCounter);
-    this.setState({
+    this.setState(prevState => ({
       // Add a new item. It must have a unique key!
-      items: this.state.items.concat({
-        i: "n" + this.state.newCounter,
-        x: (this.state.items.length * 2) % (this.state.cols || 12),
-        y: Infinity, // puts it at the bottom
-        w: 2,
-        h: 2
-      }),
+      layouts: {
+        ...prevState.layouts,
+        [prevState.currentBreakpoint]: [
+          ...prevState.layouts[prevState.currentBreakpoint],
+          {
+            i: "n" + this.state.newCounter,
+            x:
+              (this.state.layouts[prevState.currentBreakpoint].length * 2) %
+              (this.state.cols || 12),
+            y: Infinity, // puts it at the bottom
+            w: 2,
+            h: 2
+          }
+        ]
+      },
       // Increment the counter to ensure key is always unique.
       newCounter: this.state.newCounter + 1
-    });
+    }));
   }
 
   // We're using the cols coming back from this to calculate where to add new items.
   onBreakpointChange(breakpoint, cols) {
     this.setState({
-      breakpoint: breakpoint,
+      currentBreakpoint: breakpoint,
       cols: cols
     });
   }
 
-  onLayoutChange(layout) {
-    this.props.onLayoutChange(layout);
-    this.setState({ layout: layout });
+  onLayoutChange(layout, layouts) {
+    this.props.onLayoutChange(layout, layouts);
+    this.setState({ layouts });
   }
 
-  onRemoveItem(i) {
-    console.log("removing", i);
-    this.setState({ items: _.reject(this.state.items, { i: i }) });
+  onRemoveItem(item) {
+    console.log("removing", item.i);
+    this.setState(prevState => ({
+      layouts: {
+        ...prevState.layouts,
+        [prevState.currentBreakpoint]: prevState.layouts[
+          prevState.currentBreakpoint
+        ].filter(({ i }) => i !== item.i)
+      }
+    }));
   }
 
   render() {
@@ -106,11 +120,12 @@ class AddRemoveLayout extends React.PureComponent {
       <div>
         <button onClick={this.onAddItem}>Add Item</button>
         <ResponsiveReactGridLayout
+          {...this.props}
+          layouts={this.state.layouts}
           onLayoutChange={this.onLayoutChange}
           onBreakpointChange={this.onBreakpointChange}
-          {...this.props}
         >
-          {_.map(this.state.items, el => this.createElement(el))}
+          {this.generateDOM()}
         </ResponsiveReactGridLayout>
       </div>
     );
