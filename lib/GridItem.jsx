@@ -63,6 +63,8 @@ type Props = {
   maxH: number,
   i: string,
 
+  resizeHandles?: string[],
+
   onDrag?: GridItemCallback<GridDragEvent>,
   onDragStart?: GridItemCallback<GridDragEvent>,
   onDragStop?: GridItemCallback<GridDragEvent>,
@@ -397,7 +399,7 @@ export default class GridItem extends React.Component<Props, State> {
     child: ReactElement<any>,
     position: Position
   ): ReactElement<any> {
-    const { cols, x, minW, minH, maxW, maxH } = this.props;
+    const { cols, x, minW, minH, maxW, maxH, resizeHandles } = this.props;
 
     // This is the max possible width - doesn't go to infinity because of the width of the window
     const maxWidth = this.calcPosition(0, 0, cols - x, 0).width;
@@ -419,6 +421,7 @@ export default class GridItem extends React.Component<Props, State> {
         onResizeStop={this.onResizeStop}
         onResizeStart={this.onResizeStart}
         onResize={this.onResize}
+        resizeHandles={resizeHandles}
       >
         {child}
       </Resizable>

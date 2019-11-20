@@ -139,5 +139,17 @@ module.exports = [
       "Once you drop the item within the grid you'll get its coordinates/properties and can perform actions with " +
         "it accordingly."
     ]
+  },
+  {
+    title: "Responsive Bootstrap Style",
+    source: "responsive-bootstrap-style",
+    paragraphs: []
+  },
+  {
+    title: "Resizable Handles",
+    source: "resizable-handles",
+    paragraphs: [
+      "This demonstrates how to implement resizable handles for any corner"
+    ]
   }
 ];

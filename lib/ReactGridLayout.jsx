@@ -71,6 +71,7 @@ export type Props = {
   useCSSTransforms: boolean,
   transformScale: number,
   droppingItem: $Shape<LayoutItem>,
+  resizeHandles: string[],
 
   // Callbacks
   onLayoutChange: Layout => void,
@@ -191,6 +192,19 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     transformScale: PropTypes.number,
     // If true, an external element can trigger onDrop callback with a specific grid position as a parameter
     isDroppable: PropTypes.bool,
+    // Defines which resize handles should be rendered (default: 'se')
+    // Allows for any combination of:
+    // 's' - South handle (bottom-center)
+    // 'w' - West handle (left-center)
+    // 'e' - East handle (right-center)
+    // 'n' - North handle (top-center)
+    // 'sw' - Southwest handle (bottom-left)
+    // 'nw' - Northwest handle (top-left)
+    // 'se' - Southeast handle (bottom-right)
+    // 'ne' - Northeast handle (top-right)
+    resizeHandles: PropTypes.arrayOf(
+      PropTypes.oneOf(["s", "w", "e", "n", "sw", "nw", "se", "ne"])
+    ),
 
     //
     // Callbacks
@@ -269,6 +283,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       h: 1,
       w: 1
     },
+    resizeHandles: ["se"],
     onLayoutChange: noop,
     onDragStart: noop,
     onDrag: noop,
@@ -662,7 +677,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       useCSSTransforms,
       transformScale,
       draggableCancel,
-      draggableHandle
+      draggableHandle,
+      resizeHandles
     } = this.props;
     const { mounted, droppingPosition } = this.state;
 
@@ -673,6 +689,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     const resizable = Boolean(
       !l.static && isResizable && (l.isResizable || l.isResizable == null)
     );
+    const resizeHandlesOptions = l.resizeHandles || resizeHandles;
 
     return (
       <GridItem
@@ -706,6 +723,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         maxW={l.maxW}
         static={l.static}
         droppingPosition={isDroppingItem ? droppingPosition : undefined}
+        resizeHandles={resizeHandlesOptions}
       >
         {child}
       </GridItem>

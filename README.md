@@ -50,6 +50,7 @@ RGL is React-only and does not require jQuery.
 1. [Error Case](https://strml.github.io/react-grid-layout/examples/13-error-case.html)
 1. [Toolbox](https://strml.github.io/react-grid-layout/examples/14-toolbox.html)
 1. [Drag From Outside](https://strml.github.io/react-grid-layout/examples/15-drag-from-outside.html)
+1. [Resizable Handles](https://strml.github.io/react-grid-layout/examples/17-resizable-handles.html)
 
 #### Projects Using React-Grid-Layout
 
@@ -289,7 +290,7 @@ containerPadding: ?[number, number] = margin,
 // if you like.
 rowHeight: ?number = 150,
 
-// Configuration of a dropping element. Dropping element is a "virtual" element 
+// Configuration of a dropping element. Dropping element is a "virtual" element
 // which appears when you drag over some element from outside.
 // It can be changed by passing specific parameters:
 //  i - id of an element
@@ -313,9 +314,9 @@ transformScale: ?number = 1,
 // dragged over.
 preventCollision: ?boolean = false;
 
-// If true, droppable elements (with `draggable={true}` attribute) 
+// If true, droppable elements (with `draggable={true}` attribute)
 // can be dropped on the grid. It triggers "onDrop" callback
-// with position and event object as parameters. 
+// with position and event object as parameters.
 // It can be useful for dropping an element in a specific position
 //
 // NOTE: In case of using Firefox you should add
@@ -324,6 +325,17 @@ preventCollision: ?boolean = false;
 // onDragStart attribute is required for Firefox for a dragging initialization
 // @see https://bugzilla.mozilla.org/show_bug.cgi?id=568313
 isDroppable: ?boolean = false
+// Defines which resize handles should be rendered
+// Allows for any combination of:
+// 's' - South handle (bottom-center)
+// 'w' - West handle (left-center)
+// 'e' - East handle (right-center)
+// 'n' - North handle (top-center)
+// 'sw' - Southwest handle (bottom-left)
+// 'nw' - Northwest handle (top-left)
+// 'se' - Southeast handle (bottom-right)
+// 'ne' - Northeast handle (top-right)
+resizeHandles: ?string[] = ['se']
 
 //
 // Callbacks
@@ -439,6 +451,7 @@ will be draggable.
   isDraggable: ?boolean = true,
   // If false, will not be resizable. Overrides `static`.
   isResizable: ?boolean = true
+  resizeHandles?: ?Array<'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'> = ['se']
 }
 ```
 
