@@ -285,18 +285,25 @@ export default class GridItem extends React.Component<Props, State> {
    * @return {Object} x and y in grid units.
    */
   calcXY(top: number, left: number): { x: number, y: number } {
-    const { margin, cols, rowHeight, w, h, maxRows } = this.props;
+    const {
+      margin,
+      cols,
+      rowHeight,
+      w,
+      h,
+      maxRows,
+      containerPadding
+    } = this.props;
     const colWidth = this.calcColWidth();
 
-    // left = colWidth * x + margin * (x + 1)
-    // l = cx + m(x+1)
-    // l = cx + mx + m
-    // l - m = cx + mx
-    // l - m = x(c + m)
-    // (l - m) / (c + m) = x
+    // left = colWidth * x + margin * x + containerPadding
+    // l = cx + mx + p
+    // l - p = cx + mx
+    // l - p = x(c + m)
+    // (l - p) / (c + m) = x
     // x = (left - margin) / (coldWidth + margin)
-    let x = Math.round((left - margin[0]) / (colWidth + margin[0]));
-    let y = Math.round((top - margin[1]) / (rowHeight + margin[1]));
+    let x = Math.round((left - containerPadding[0]) / (colWidth + margin[0]));
+    let y = Math.round((top - containerPadding[1]) / (rowHeight + margin[1]));
 
     // Capping
     x = Math.max(Math.min(x, cols - w), 0);
@@ -321,7 +328,7 @@ export default class GridItem extends React.Component<Props, State> {
     const { margin, maxRows, cols, rowHeight, x, y } = this.props;
     const colWidth = this.calcColWidth();
 
-    // width = colWidth * w - (margin * (w - 1))
+    // width = colWidth * w + (margin * (w - 1))
     // ...
     // w = (width + margin) / (colWidth + margin)
     let w = Math.round((width + margin[0]) / (colWidth + margin[0]));

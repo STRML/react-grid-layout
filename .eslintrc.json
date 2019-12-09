@@ -1,6 +1,11 @@
 {
   "root": true,
   "parser": "babel-eslint",
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
   "plugins": [
     "react",
     "flowtype"

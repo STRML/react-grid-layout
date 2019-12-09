@@ -56,6 +56,8 @@
     "babel-plugin-espower": "^3.0.1",
     "css-loader": "^3.2.0",
     "ejs": "^2.7.1",
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-react-16": "^1.15.1",
     "eslint": "^6.4.0",
     "eslint-plugin-flowtype": "^4.3.0",
     "eslint-plugin-mocha": "^6.2.0",
