@@ -71,6 +71,8 @@ export type Props = {
   useCSSTransforms: boolean,
   transformScale: number,
   droppingItem: $Shape<LayoutItem>,
+  // Axis for resizing (see react-resizable)
+  resizableAxis?: "both" | "x" | "y",
 
   // Callbacks
   onLayoutChange: Layout => void,
@@ -192,6 +194,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     // If true, an external element can trigger onDrop callback with a specific grid position as a parameter
     isDroppable: PropTypes.bool,
 
+    resizableAxis: PropTypes.oneOf(["both", "x", "y"]),
+
     //
     // Callbacks
     //
@@ -264,6 +268,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     verticalCompact: true,
     compactType: "vertical",
     preventCollision: false,
+    resizableAxis: "both",
     droppingItem: {
       i: "__dropping-elem__",
       h: 1,
@@ -610,7 +615,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       rowHeight,
       maxRows,
       useCSSTransforms,
-      transformScale
+      transformScale,
+      resizableAxis
     } = this.props;
 
     // {...this.state.activeDrag} is pretty slow, actually
@@ -632,6 +638,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         isResizable={false}
         useCSSTransforms={useCSSTransforms}
         transformScale={transformScale}
+        resizableAxis={resizableAxis}
       >
         <div />
       </GridItem>
@@ -662,7 +669,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       useCSSTransforms,
       transformScale,
       draggableCancel,
-      draggableHandle
+      draggableHandle,
+      resizableAxis
     } = this.props;
     const { mounted, droppingPosition } = this.state;
 
@@ -710,6 +718,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         maxW={l.maxW}
         static={l.static}
         droppingPosition={isDroppingItem ? droppingPosition : undefined}
+        resizableAxis={resizableAxis}
       >
         {child}
       </GridItem>

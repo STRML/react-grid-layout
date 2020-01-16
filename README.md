@@ -325,6 +325,13 @@ preventCollision: ?boolean = false;
 // @see https://bugzilla.mozilla.org/show_bug.cgi?id=568313
 isDroppable: ?boolean = false
 
+// Determines which axis/axes the element can be resized on.
+// Accepted values:
+// - `both` allows resizing horizontally and vertically (default).
+// - `x` limits resizing to horizontal axis.
+// - `y` limits resizing to vertical axis.
+resizableAxis: ?string = 'both',
+
 //
 // Callbacks
 //

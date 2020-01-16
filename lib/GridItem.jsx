@@ -41,6 +41,7 @@ type Props = {
   isDraggable: boolean,
   isResizable: boolean,
   static?: boolean,
+  resizableAxis?: "both" | "x" | "y",
   useCSSTransforms?: boolean,
   usePercentages?: boolean,
   transformScale: number,
@@ -153,7 +154,8 @@ export default class GridItem extends React.Component<Props, State> {
       e: PropTypes.object.isRequired,
       x: PropTypes.number.isRequired,
       y: PropTypes.number.isRequired
-    })
+    }),
+    resizableAxis: PropTypes.oneOf(["both", "x", "y"])
   };
 
   static defaultProps = {
@@ -164,7 +166,8 @@ export default class GridItem extends React.Component<Props, State> {
     minW: 1,
     maxH: Infinity,
     maxW: Infinity,
-    transformScale: 1
+    transformScale: 1,
+    resizableAxis: "both"
   };
 
   state: State = {
@@ -397,7 +400,16 @@ export default class GridItem extends React.Component<Props, State> {
     child: ReactElement<any>,
     position: Position
   ): ReactElement<any> {
-    const { cols, x, minW, minH, maxW, maxH, transformScale } = this.props;
+    const {
+      cols,
+      x,
+      minW,
+      minH,
+      maxW,
+      maxH,
+      transformScale,
+      resizableAxis
+    } = this.props;
 
     // This is the max possible width - doesn't go to infinity because of the width of the window
     const maxWidth = this.calcPosition(0, 0, cols - x, 0).width;
@@ -420,6 +432,7 @@ export default class GridItem extends React.Component<Props, State> {
         onResizeStart={this.onResizeStart}
         onResize={this.onResize}
         transformScale={transformScale}
+        axis={resizableAxis}
       >
         {child}
       </Resizable>

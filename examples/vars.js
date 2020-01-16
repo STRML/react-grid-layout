@@ -139,5 +139,14 @@ module.exports = [
       "Once you drop the item within the grid you'll get its coordinates/properties and can perform actions with " +
         "it accordingly."
     ]
+  },
+  {
+    title: "Resizable Axis",
+    source: "resizable-axis",
+    paragraphs: [
+      "This demo shows how to limit resizing to a single axis.",
+      "In this case setting the `resizableAxis` prop to 'x' limits resizing to the horizontal axis. " +
+      "Setting this to 'y' would limit resizing to the vertical axis."
+    ]
   }
 ];
