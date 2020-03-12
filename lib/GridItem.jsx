@@ -14,7 +14,8 @@ import type {
   GridDragEvent,
   GridResizeEvent,
   DroppingPosition,
-  Position
+  Position,
+  ResizeAxis
 } from "./utils";
 
 import type { PositionParams } from "./calculateUtils";
@@ -43,6 +44,7 @@ type Props = {
   maxRows: number,
   isDraggable: boolean,
   isResizable: boolean,
+  resizeAxis: ResizeAxis,
   static?: boolean,
   useCSSTransforms?: boolean,
   usePercentages?: boolean,
@@ -156,7 +158,8 @@ export default class GridItem extends React.Component<Props, State> {
       e: PropTypes.object.isRequired,
       left: PropTypes.number.isRequired,
       top: PropTypes.number.isRequired
-    })
+    }),
+    resizeAxis: PropTypes.oneOf(["both", "x", "y", "none"])
   };
 
   static defaultProps = {
@@ -167,7 +170,8 @@ export default class GridItem extends React.Component<Props, State> {
     minW: 1,
     maxH: Infinity,
     maxW: Infinity,
-    transformScale: 1
+    transformScale: 1,
+    resizeAxis: "both"
   };
 
   state: State = {
@@ -333,7 +337,7 @@ export default class GridItem extends React.Component<Props, State> {
     position: Position,
     isResizable: boolean
   ): ReactElement<any> {
-    const { cols, x, minW, minH, maxW, maxH, transformScale } = this.props;
+    const { cols, x, minW, minH, maxW, maxH, transformScale, resizeAxis } = this.props;
     const positionParams = this.getPositionParams();
 
     // This is the max possible width - doesn't go to infinity because of the width of the window
@@ -362,6 +366,7 @@ export default class GridItem extends React.Component<Props, State> {
         onResizeStart={this.onResizeStart}
         onResize={this.onResize}
         transformScale={transformScale}
+        axis={resizeAxis}
       >
         {child}
       </Resizable>
