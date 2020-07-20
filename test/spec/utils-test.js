@@ -184,6 +184,96 @@ describe("moveElement", () => {
     ]);
   });
 
+  it("Moves elements down in wrap mode when element is moved earlier", () => {
+    // A B
+    // C D
+    // E F
+    // G H
+    const layout = [
+      { x: 0, y: 0, w: 1, h: 1, i: "A" },
+      { x: 1, y: 0, w: 1, h: 1, i: "B" },
+      { x: 0, y: 1, w: 1, h: 1, i: "C" },
+      { x: 1, y: 1, w: 1, h: 1, i: "D" },
+      { x: 0, y: 2, w: 1, h: 1, i: "E" },
+      { x: 1, y: 2, w: 1, h: 1, i: "F" },
+      { x: 0, y: 3, w: 1, h: 1, i: "G" },
+      { x: 1, y: 3, w: 1, h: 1, i: "H" }
+    ];
+    // move G to position B. We want the others to
+    // "stay in order",
+    // A G
+    // B C
+    // D E
+    // F H
+    const itemG = layout[6];
+    expect(
+      compactAndMove(
+        layout,
+        itemG,
+        1, // x
+        0, // y
+        true, // isUserAction
+        false, // preventCollision
+        "wrap", // compactType
+        2 // cols
+      )
+    ).toEqual([
+      expect.objectContaining({ x: 0, y: 0, w: 1, h: 1, i: "A" }),
+      expect.objectContaining({ x: 0, y: 1, w: 1, h: 1, i: "B" }),
+      expect.objectContaining({ x: 1, y: 1, w: 1, h: 1, i: "C" }),
+      expect.objectContaining({ x: 0, y: 2, w: 1, h: 1, i: "D" }),
+      expect.objectContaining({ x: 1, y: 2, w: 1, h: 1, i: "E" }),
+      expect.objectContaining({ x: 0, y: 3, w: 1, h: 1, i: "F" }),
+      expect.objectContaining({ x: 1, y: 0, w: 1, h: 1, i: "G" }),
+      expect.objectContaining({ x: 1, y: 3, w: 1, h: 1, i: "H" })
+    ]);
+  });
+
+  it("Moves elements up in wrap mode when element is moved later", () => {
+    // A B
+    // C D
+    // E F
+    // G H
+    const layout = [
+      { x: 0, y: 0, w: 1, h: 1, i: "A" },
+      { x: 1, y: 0, w: 1, h: 1, i: "B" },
+      { x: 0, y: 1, w: 1, h: 1, i: "C" },
+      { x: 1, y: 1, w: 1, h: 1, i: "D" },
+      { x: 0, y: 2, w: 1, h: 1, i: "E" },
+      { x: 1, y: 2, w: 1, h: 1, i: "F" },
+      { x: 0, y: 3, w: 1, h: 1, i: "G" },
+      { x: 1, y: 3, w: 1, h: 1, i: "H" }
+    ];
+    // move B to position F. We want the others to
+    // "stay in order" visually,
+    // A C
+    // D E
+    // F B
+    // G H
+    const itemB = layout[1];
+    expect(
+      compactAndMove(
+        layout,
+        itemB,
+        1, // x
+        2, // y
+        true, // isUserAction
+        false, // preventCollision
+        "wrap", // compactType
+        2 // cols
+      )
+    ).toEqual([
+      expect.objectContaining({ x: 0, y: 0, w: 1, h: 1, i: "A" }),
+      expect.objectContaining({ x: 1, y: 2, w: 1, h: 1, i: "B" }),
+      expect.objectContaining({ x: 1, y: 0, w: 1, h: 1, i: "C" }),
+      expect.objectContaining({ x: 0, y: 1, w: 1, h: 1, i: "D" }),
+      expect.objectContaining({ x: 1, y: 1, w: 1, h: 1, i: "E" }),
+      expect.objectContaining({ x: 0, y: 2, w: 1, h: 1, i: "F" }),
+      expect.objectContaining({ x: 0, y: 3, w: 1, h: 1, i: "G" }),
+      expect.objectContaining({ x: 1, y: 3, w: 1, h: 1, i: "H" })
+    ]);
+  });
+
   it("Calculates the correct collision when moving large object far", () => {
     const layout = [
       { x: 0, y: 0, w: 1, h: 10, i: "A" },

@@ -271,8 +271,9 @@ draggableHandle: ?string = '',
 // If true, the layout will compact vertically
 verticalCompact: ?boolean = true,
 
-// Compaction type.
-compactType: ?('vertical' | 'horizontal') = 'vertical';
+// Compaction type. "wrap" mode is handled for dragging
+// but does not yet cause any actual compacting.
+compactType: ?('vertical' | 'horizontal' | 'wrap') = 'vertical';
 
 // Layout is an array of object with the format:
 // {x: number, y: number, w: number, h: number}
