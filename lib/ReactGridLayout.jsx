@@ -92,6 +92,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     layout: [],
     margin: [10, 10],
     isBounded: false,
+    isBoundedX: true,
+    isBoundedY: true,
     isDraggable: true,
     isResizable: true,
     isDroppable: false,
@@ -511,6 +513,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       isDraggable,
       isResizable,
       isBounded,
+      isBoundedX,
+      isBoundedY,
       useCSSTransforms,
       transformScale,
       draggableCancel,
@@ -554,6 +558,20 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         isDraggable={draggable}
         isResizable={resizable}
         isBounded={bounded}
+        isBoundedX={
+          isBoundedX !== undefined
+            ? isBoundedX
+            : l.isBoundedX
+            ? l.isBoundedX
+            : true
+        }
+        isBoundedY={
+          isBoundedY !== undefined
+            ? isBoundedY
+            : l.isBoundedY
+            ? l.isBoundedY
+            : true
+        }
         useCSSTransforms={useCSSTransforms && mounted}
         usePercentages={!mounted}
         transformScale={transformScale}

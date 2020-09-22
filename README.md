@@ -462,9 +462,14 @@ will be draggable, even if the item is marked `static: true`.
   isResizable: ?boolean = true,
   // By default, a handle is only shown on the bottom-right (southeast) corner.
   // Note that resizing from the top or left is generally not intuitive.
-  resizeHandles?: ?Array<'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'> = ['se']
+  resizeHandles?: ?Array<'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'> = ['se'],
   // If true and draggable, item will be moved only within grid.
-  isBounded: ?boolean = false
+  // Can be overwritten per axis with isBoundedX and isBoundedY
+  isBounded: ?boolean = false,
+  // If true and isBounded, item will move only within grid on X axis
+  isBoundedX: ?boolean = true,
+  // If true and isBounded, item will move only within grid on Y axis
+  isBoundedY: ?boolean = true
 }
 ```
 

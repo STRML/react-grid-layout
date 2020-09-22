@@ -51,6 +51,8 @@ type Props = {
   isDraggable: boolean,
   isResizable: boolean,
   isBounded: boolean,
+  isBoundedX?: boolean,
+  isBoundedY?: boolean,
   static?: boolean,
   useCSSTransforms?: boolean,
   usePercentages?: boolean,
@@ -74,7 +76,7 @@ type Props = {
   maxH: number,
   i: string,
 
-  resizeHandles?: Array<'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'>,
+  resizeHandles?: Array<"s" | "w" | "e" | "n" | "sw" | "nw" | "se" | "ne">,
 
   onDrag?: GridItemCallback<GridDragEvent>,
   onDragStart?: GridItemCallback<GridDragEvent>,
@@ -150,6 +152,8 @@ export default class GridItem extends React.Component<Props, State> {
     isDraggable: PropTypes.bool.isRequired,
     isResizable: PropTypes.bool.isRequired,
     isBounded: PropTypes.bool.isRequired,
+    isBoundedX: PropTypes.bool,
+    isBoundedY: PropTypes.bool,
     static: PropTypes.bool,
 
     // Use CSS transforms instead of top/left
@@ -446,7 +450,15 @@ export default class GridItem extends React.Component<Props, State> {
     let top = this.state.dragging.top + deltaY;
     let left = this.state.dragging.left + deltaX;
 
-    const { isBounded, i, w, h, containerWidth } = this.props;
+    const {
+      isBounded,
+      isBoundedX,
+      isBoundedY,
+      i,
+      w,
+      h,
+      containerWidth
+    } = this.props;
     const positionParams = this.getPositionParams();
 
     // Boundary calculations; keeps items within the grid
@@ -455,14 +467,19 @@ export default class GridItem extends React.Component<Props, State> {
 
       if (offsetParent) {
         const { margin, rowHeight } = this.props;
-        const bottomBoundary =
-          offsetParent.clientHeight - calcGridItemWHPx(h, rowHeight, margin[1]);
-        top = clamp(top, 0, bottomBoundary);
+        if (isBoundedY !== false) {
+          const bottomBoundary =
+            offsetParent.clientHeight -
+            calcGridItemWHPx(h, rowHeight, margin[1]);
+          top = clamp(top, 0, bottomBoundary);
+        }
 
-        const colWidth = calcGridColWidth(positionParams);
-        const rightBoundary =
-          containerWidth - calcGridItemWHPx(w, colWidth, margin[0]);
-        left = clamp(left, 0, rightBoundary);
+        if (isBoundedX !== false) {
+          const colWidth = calcGridColWidth(positionParams);
+          const rightBoundary =
+            containerWidth - calcGridItemWHPx(w, colWidth, margin[0]);
+          left = clamp(left, 0, rightBoundary);
+        }
       }
     }
 
