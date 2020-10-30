@@ -28,6 +28,7 @@
     "fluid",
     "responsive"
   ],
+  "files":["dist/*"],
   "author": "Samuel Reed <samuel.trace.reed@gmail.com> (http://strml.net/)",
   "license": "MIT",
   "bugs": {
