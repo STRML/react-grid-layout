@@ -10,6 +10,7 @@ import {
   cloneLayoutItem,
   compact,
   getLayoutItem,
+  getLayoutItemIndex,
   moveElement,
   synchronizeLayoutWithChildren,
   getAllCollisions,
@@ -47,6 +48,7 @@ type State = {
   oldDragItem: ?LayoutItem,
   oldLayout: ?Layout,
   oldResizeItem: ?LayoutItem,
+  activeResizeItem: ?LayoutItem,
   droppingDOMNode: ?ReactElement<any>,
   droppingPosition?: DroppingPosition,
   // Mirrored props
@@ -129,6 +131,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     oldDragItem: null,
     oldLayout: null,
     oldResizeItem: null,
+    activeResizeItem: null,
     droppingDOMNode: null,
     children: []
   };
@@ -373,8 +376,10 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   onResize(i: string, w: number, h: number, { e, node }: GridResizeEvent) {
     const { layout, oldResizeItem } = this.state;
     const { cols, preventCollision } = this.props;
-    const l: ?LayoutItem = getLayoutItem(layout, i);
-    if (!l) return;
+    const layoutItem: ?LayoutItem = getLayoutItem(layout, i);
+    if (!layoutItem) return;
+
+    const l = cloneLayoutItem(layoutItem);
 
     // Something like quad tree should be used
     // to find collisions faster
@@ -421,12 +426,14 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     // Re-compact the layout and set the drag placeholder.
     this.setState({
       layout: compact(layout, compactType(this.props), cols),
+      // The item was cloned to prevent prop mutation. The layout will be updated in onResizeStop.
+      activeResizeItem: l,
       activeDrag: placeholder
     });
   }
 
   onResizeStop(i: string, w: number, h: number, { e, node }: GridResizeEvent) {
-    const { layout, oldResizeItem } = this.state;
+    const { layout, activeResizeItem, oldResizeItem } = this.state;
     const { cols } = this.props;
     var l = getLayoutItem(layout, i);
 
@@ -434,6 +441,18 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     // Set state
     const newLayout = compact(layout, compactType(this.props), cols);
+
+    if (activeResizeItem) {
+      const activeResizeItemIndex = getLayoutItemIndex(
+        newLayout,
+        activeResizeItem.i
+      );
+      if (activeResizeItemIndex >= 0) {
+        // Update the active item
+        newLayout[activeResizeItemIndex] = activeResizeItem;
+      }
+    }
+
     const { oldLayout } = this.state;
     this.setState({
       activeDrag: null,
