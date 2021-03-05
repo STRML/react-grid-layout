@@ -79,7 +79,7 @@ export default function WidthProvider<Config>(
       // eslint-disable-next-line react/no-find-dom-node
       const node = ReactDOM.findDOMNode(this); // Flow casts this to Text | Element
       if (node instanceof HTMLElement)
-        this.setState({ width: node.offsetWidth });
+        setTimeout(this.setState({ width: node.offsetWidth }), 0);
     };
 
     render() {
