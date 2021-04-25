@@ -34,17 +34,17 @@ export default class AddRemoveLayout extends React.PureComponent {
     this.onBreakpointChange = this.onBreakpointChange.bind(this);
   }
 
-  createElement(el) {
+  createElement(el,index,list) {
     const removeStyle = {
       position: "absolute",
       right: "2px",
       top: 0,
       cursor: "pointer"
     };
-    const i = el.add ? "+" : el.i;
+    const i = el.i;
     return (
       <div key={i} data-grid={el}>
-        {el.add ? (
+        {index.toString() === (list.length - 1).toString() ? (
           <span
             className="add text"
             onClick={this.onAddItem}
@@ -110,7 +110,7 @@ export default class AddRemoveLayout extends React.PureComponent {
           onBreakpointChange={this.onBreakpointChange}
           {...this.props}
         >
-          {_.map(this.state.items, el => this.createElement(el))}
+          {_.map(this.state.items, (el,index,list) => this.createElement(el,index,list))}
         </ResponsiveReactGridLayout>
       </div>
     );
