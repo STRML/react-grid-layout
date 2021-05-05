@@ -16,7 +16,8 @@ import {
   moveElement,
   noop,
   synchronizeLayoutWithChildren,
-  withLayoutItem
+  withLayoutItem,
+  withinLayout
 } from "./utils";
 
 import { calcXY } from "./calculateUtils";
@@ -96,6 +97,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     isDraggable: true,
     isResizable: true,
     isDroppable: false,
+    isDetachable: false,
     useCSSTransforms: true,
     transformScale: 1,
     verticalCompact: true,
@@ -256,8 +258,11 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     { e, node }: GridDragEvent
   ): void {
     const { layout } = this.state;
+    const { isDetachable } = this.props;
     const l = getLayoutItem(layout, i);
-    if (!l) return;
+    if (!l || isDetachable) return;
+
+    // if (isDetachable) { node.setAttribute('draggable', true) }
 
     this.setState({
       oldDragItem: cloneLayoutItem(l),
@@ -278,7 +283,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   onDrag(i: string, x: number, y: number, { e, node }: GridDragEvent): void {
     const { oldDragItem } = this.state;
     let { layout } = this.state;
-    const { cols } = this.props;
+    const { cols, isDetachable } = this.props;
     const l = getLayoutItem(layout, i);
     if (!l) return;
 
@@ -307,10 +312,15 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     this.props.onDrag(layout, oldDragItem, l, placeholder, e, node);
 
-    this.setState({
-      layout: compact(layout, compactType(this.props), cols),
-      activeDrag: placeholder
-    });
+    // if (isDetachable && !withinLayout(node.parentElement, e)) {
+    //   this.removeDroppingPlaceholder();
+      // node.setAttribute("draggable", true);
+    // } else {
+      this.setState({
+        layout: compact(layout, compactType(this.props), cols),
+        activeDrag: placeholder
+      });
+    // }
   }
 
   /**
@@ -327,6 +337,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     y: number,
     { e, node }: GridDragEvent
   ): void {
+    console.log('onDragStop');
     if (!this.state.activeDrag) return;
 
     const { oldDragItem } = this.state;
@@ -528,6 +539,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       rowHeight,
       maxRows,
       isDraggable,
+      isDetachable,
       isResizable,
       isBounded,
       useCSSTransforms,
@@ -546,6 +558,10 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       typeof l.isDraggable === "boolean"
         ? l.isDraggable
         : !l.static && isDraggable;
+    const detachable =
+      typeof l.isDetachable === "boolean"
+        ? l.isDetachable
+        : !l.static && isDetachable;
     const resizable =
       typeof l.isResizable === "boolean"
         ? l.isResizable
@@ -572,6 +588,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         onResize={this.onResize}
         onResizeStop={this.onResizeStop}
         isDraggable={draggable}
+        isDetachable={detachable}
         isResizable={resizable}
         isBounded={bounded}
         useCSSTransforms={useCSSTransforms && mounted}
@@ -599,6 +616,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   // Called while dragging an element. Part of browser native drag/drop API.
   // Native event target might be the layout itself, or an element within the layout.
   onDragOver: DragOverEvent => void | false = e => {
+    console.log('onDragOver');
     // we should ignore events from layout's children in Firefox
     // to avoid unpredictable jumping of a dropping placeholder
     // FIXME remove this hack
@@ -702,10 +720,12 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   };
 
   onDragEnter: () => void = () => {
+    console.log('onDragEnter');
     this.dragEnterCounter++;
   };
 
   onDrop: EventHandler = (e: Event) => {
+    console.log('onDrop');
     const { droppingItem } = this.props;
     const { layout } = this.state;
     const item = layout.find(l => l.i === droppingItem.i);
@@ -719,7 +739,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   };
 
   render(): React.Element<"div"> {
-    const { className, style, isDroppable, innerRef } = this.props;
+    const { className, style, isDroppable, isDetachable, innerRef } = this.props;
 
     const mergedClassName = classNames(layoutClassName, className);
     const mergedStyle = {

@@ -160,5 +160,12 @@ module.exports = [
     paragraphs: [
       "This demonstrates how to compensate for a scaled parent."
     ]
+  },
+  {
+    title: "Multiple Layouts",
+    source: "multiple-layouts",
+    paragraphs: [
+      "This demonstrates how to use multiple layouts and drag between them"
+    ]
   }
 ];
