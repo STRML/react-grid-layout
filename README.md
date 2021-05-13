@@ -4,6 +4,7 @@
 [![CDNJS](https://img.shields.io/cdnjs/v/react-grid-layout.svg)](https://cdnjs.com/libraries/react-grid-layout)
 [![npm package](https://img.shields.io/npm/v/react-grid-layout.svg?style=flat-square)](https://www.npmjs.org/package/react-grid-layout)
 [![npm downloads](https://img.shields.io/npm/dt/react-grid-layout.svg?maxAge=2592000)]()
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/STRML/react-grid-layout) 
 
 React-Grid-Layout is a grid layout system much like [Packery](http://packery.metafizzy.co/) or
 [Gridster](http://dsmorse.github.io/gridster.js/), for React.
@@ -510,6 +511,16 @@ Because the `children` prop doesn't change between rerenders, updates to `<MyGri
 ## Contribute
 
 If you have a feature request, please add it as an issue or make a pull request.
+
+### Online one-click setup for contributing
+
+You can use gitpod(a free online VS Code-like ide) for contributing. With a single click it will launch a workspace and automatically:
+
+- clone the `react-grid-layout` repo.
+- install the dependencies.
+- start `yarn run dev`.
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/from-referrer/)
 
 If you have a bug to report, please reproduce the bug in [CodeSandbox](https://codesandbox.io/s/5wy3rz5z1x?module=%2Fsrc%2FShowcaseLayout.js) to help
 us easily isolate it.

@@ -1,0 +1,10 @@
+tasks:
+  - init: yarn install && yarn run build
+    command: yarn run dev
+ports: 
+  - port: 4002
+    onOpen: open-preview
+
+vscode:
+  extensions:
+    - flowtype.flow-for-vscode@1.5.0:AwOT6wgHTF43loZQCAUMLA==
