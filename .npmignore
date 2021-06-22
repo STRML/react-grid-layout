@@ -2,8 +2,6 @@ test/
 examples/
 yarn.lock
 .github
-*.config.js
-Makefile
 *.sh
 *.*.json
 __tests__/
