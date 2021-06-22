@@ -48,11 +48,18 @@ export default class ToolboxLayout extends React.Component {
     compactType: "vertical",
     mounted: false,
     layouts: { lg: this.props.initialLayout },
-    toolbox: { lg: [] }
+    toolbox: {},
+    breakpoints: [],
   };
 
   componentDidMount() {
-    this.setState({ mounted: true });
+    const breakpoints = Object.keys(this.props.cols);
+
+    this.setState({
+      breakpoints,
+      mounted: true,
+      toolbox: { ...this.getEmptyToolbox(breakpoints) },
+    });
   }
 
   generateDOM() {
@@ -77,6 +84,15 @@ export default class ToolboxLayout extends React.Component {
     });
   }
 
+  getEmptyToolbox = (breakpoints) => {
+    return breakpoints.reduce(
+      (toolbox, item) => {
+        toolbox[item] = [];
+
+        return toolbox;
+      }, {});
+  }
+
   onBreakpointChange = breakpoint => {
     this.setState(prevState => ({
       currentBreakpoint: breakpoint,
@@ -84,8 +100,7 @@ export default class ToolboxLayout extends React.Component {
         ...prevState.toolbox,
         [breakpoint]:
           prevState.toolbox[breakpoint] ||
-          prevState.toolbox[prevState.currentBreakpoint] ||
-          []
+          prevState.toolbox[prevState.currentBreakpoint]
       }
     }));
   };
@@ -102,39 +117,61 @@ export default class ToolboxLayout extends React.Component {
   };
 
   onTakeItem = item => {
-    this.setState(prevState => ({
-      toolbox: {
-        ...prevState.toolbox,
-        [prevState.currentBreakpoint]: prevState.toolbox[
-          prevState.currentBreakpoint
-        ].filter(({ i }) => i !== item.i)
-      },
-      layouts: {
-        ...prevState.layouts,
-        [prevState.currentBreakpoint]: [
-          ...prevState.layouts[prevState.currentBreakpoint],
-          item
-        ]
+    this.setState(prevState => {
+      const toolbox = this.state.breakpoints.reduce(
+        (toolboxItems, breakpoint) => {
+          toolboxItems[breakpoint] = [
+            ...prevState.toolbox[breakpoint].filter(({ i }) => i !== item.i)
+          ]
+
+          return toolboxItems
+        }, {});
+
+      const layouts = this.state.breakpoints.reduce(
+        (layoutsItems, breakpoint) => {
+          if (!prevState.layouts[breakpoint].find(layoutItem => layoutItem.i === item.i)) {
+            layoutsItems[breakpoint] = [
+              ...prevState.layouts[breakpoint],
+              item,
+            ]
+          } else {
+            layoutsItems[breakpoint] = [
+              ...prevState.layouts[breakpoint]
+            ]
+          }
+
+          return layoutsItems
+        }, {});
+
+      return {
+        toolbox: toolbox,
+        layouts: layouts,
       }
-    }));
+    });
   };
 
   onPutItem = item => {
     this.setState(prevState => {
+      const toolbox = this.state.breakpoints.reduce((toolboxItems, breakpoint) => {
+        toolboxItems[breakpoint] = [
+          ...prevState.toolbox[breakpoint],
+          item,
+        ]
+
+        return toolboxItems
+      }, {});
+
+      const layouts = this.state.breakpoints.reduce((layoutsItems, breakpoint) => {
+        layoutsItems[breakpoint] = [
+          ...prevState.layouts[breakpoint] || [...prevState.layouts[this.state.currentBreakpoint]]
+        ].filter(layoutsItem => layoutsItem.i !== item.i)
+
+        return layoutsItems
+      }, {});
+
       return {
-        toolbox: {
-          ...prevState.toolbox,
-          [prevState.currentBreakpoint]: [
-            ...(prevState.toolbox[prevState.currentBreakpoint] || []),
-            item
-          ]
-        },
-        layouts: {
-          ...prevState.layouts,
-          [prevState.currentBreakpoint]: prevState.layouts[
-            prevState.currentBreakpoint
-          ].filter(({ i }) => i !== item.i)
-        }
+        toolbox,
+        layouts,
       };
     });
   };
@@ -146,7 +183,8 @@ export default class ToolboxLayout extends React.Component {
 
   onNewLayout = () => {
     this.setState({
-      layouts: { lg: generateLayout() }
+      layouts: { lg: generateLayout() },
+      toolbox: { ...this.getEmptyToolbox(this.state.breakpoints) }
     });
   };
 
