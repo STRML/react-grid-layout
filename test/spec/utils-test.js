@@ -392,6 +392,33 @@ describe("compact vertical", () => {
     ]);
   });
 
+  it("Handles recursive collision with statics mixed throughout the layout", () => {
+    const layout = [
+      { w: 59, h: 5, x: 0, y: 113, i: "A", static: true },
+      { w: 59, h: 5, x: 0, y: 74, i: "B", static: true },
+      { w: 59, h: 5, x: 0, y: 35, i: "C", static: true },
+      { w: 40, h: 20, x: 0, y: 0, i: "D" },
+      { w: 40, h: 20, x: 0, y: 20, i: "E" },
+      { w: 20, h: 20, x: 0, y: 40, i: "F" },
+      { w: 20, h: 20, x: 20, y: 40, i: "G" },
+      { w: 20, h: 10, x: 0, y: 60, i: "H" },
+      { w: 20, h: 10, x: 20, y: 60, i: "I" }
+    ];
+
+    const out = compact(layout, "vertical", 60);
+    expect(out).toEqual([
+      { w: 59, h: 5, x: 0, y: 113, i: "A", moved: false, static: true },
+      { w: 59, h: 5, x: 0, y: 74, i: "B", moved: false, static: true },
+      { w: 59, h: 5, x: 0, y: 35, i: "C", moved: false, static: true },
+      { w: 40, h: 20, x: 0, y: 0, i: "D", moved: false, static: false },
+      { w: 40, h: 20, x: 0, y: 40, i: "E", moved: false, static: false },
+      { w: 20, h: 20, x: 0, y: 79, i: "F", moved: false, static: false },
+      { w: 20, h: 20, x: 20, y: 79, i: "G", moved: false, static: false },
+      { w: 20, h: 10, x: 0, y: 99, i: "H", moved: false, static: false },
+      { w: 20, h: 10, x: 20, y: 99, i: "I", moved: false, static: false }
+    ]);
+  });
+
   it("Clones layout items (does not modify input)", () => {
     const layout = [
       { x: 0, y: 0, w: 2, h: 5, i: "1" },
