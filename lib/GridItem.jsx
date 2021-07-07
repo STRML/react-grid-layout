@@ -43,7 +43,7 @@ type GridItemCallback<Data: GridDragEvent | GridResizeEvent> = (
 ) => void;
 
 type State = {
-  resizing: ?{ width: number, height: number },
+  resizing: ?{ top: number, left: number, width: number, height: number },
   dragging: ?{ top: number, left: number },
   className: string
 };
@@ -369,7 +369,6 @@ export default class GridItem extends React.Component<Props, State> {
   ): ReactElement<any> {
     const {
       cols,
-      x,
       minW,
       minH,
       maxW,
@@ -381,8 +380,7 @@ export default class GridItem extends React.Component<Props, State> {
     const positionParams = this.getPositionParams();
 
     // This is the max possible width - doesn't go to infinity because of the width of the window
-    const maxWidth = calcGridItemPosition(positionParams, 0, 0, cols - x, 0)
-      .width;
+    const maxWidth = calcGridItemPosition(positionParams, 0, 0, cols, 0).width;
 
     // Calculate min/max constraints using our min & maxes
     const mins = calcGridItemPosition(positionParams, 0, 0, minW, minH);
@@ -403,9 +401,9 @@ export default class GridItem extends React.Component<Props, State> {
         height={position.height}
         minConstraints={minConstraints}
         maxConstraints={maxConstraints}
-        onResizeStop={this.onResizeStop}
-        onResizeStart={this.onResizeStart}
-        onResize={this.onResize}
+        onResizeStop={(e,data, position) =>  this.onResizeStop(e, data, arguments[1])}
+        onResizeStart={(e,data, position) => this.onResizeStart(e, data, arguments[1])}
+        onResize={(e,data, position) =>  this.onResize(e, data, arguments[1])}
         transformScale={transformScale}
         resizeHandles={resizeHandles}
         handle={resizeHandle}
@@ -536,11 +534,12 @@ export default class GridItem extends React.Component<Props, State> {
    * @param  {Event}  e             event data
    * @param  {Object} callbackData  an object with node and size information
    */
-  onResizeStop: (Event, { node: HTMLElement, size: Position }) => void = (
+  onResizeStop: (Event, { node: HTMLElement, size: Position, handle: string }, position) => void = (
     e,
-    callbackData
+    callbackData,
+    position
   ) => {
-    this.onResizeHandler(e, callbackData, "onResizeStop");
+    this.onResizeHandler(e, callbackData, position,  "onResizeStop");
   };
 
   /**
@@ -548,11 +547,12 @@ export default class GridItem extends React.Component<Props, State> {
    * @param  {Event}  e             event data
    * @param  {Object} callbackData  an object with node and size information
    */
-  onResizeStart: (Event, { node: HTMLElement, size: Position }) => void = (
+  onResizeStart: (Event, { node: HTMLElement, size: Position, handle: string }, position) => void = (
     e,
-    callbackData
+    callbackData,
+    position
   ) => {
-    this.onResizeHandler(e, callbackData, "onResizeStart");
+    this.onResizeHandler(e, callbackData, position, "onResizeStart");
   };
 
   /**
@@ -560,11 +560,12 @@ export default class GridItem extends React.Component<Props, State> {
    * @param  {Event}  e             event data
    * @param  {Object} callbackData  an object with node and size information
    */
-  onResize: (Event, { node: HTMLElement, size: Position }) => void = (
+  onResize: (Event, { node: HTMLElement, size: Position, handle: string }, position) => void = (
     e,
-    callbackData
+    callbackData,
+    position
   ) => {
-    this.onResizeHandler(e, callbackData, "onResize");
+    this.onResizeHandler(e, callbackData, position,  "onResize");
   };
 
   /**
@@ -577,7 +578,8 @@ export default class GridItem extends React.Component<Props, State> {
    */
   onResizeHandler(
     e: Event,
-    { node, size }: { node: HTMLElement, size: Position },
+    { node, size, handle }: { node: HTMLElement, size: Position, handle: string },
+    position,
     handlerName: string
   ): void {
     const handler = this.props[handlerName];
@@ -591,22 +593,52 @@ export default class GridItem extends React.Component<Props, State> {
       size.width,
       size.height,
       x,
-      y
+      y,
+      handle
     );
 
     // minW should be at least 1 (TODO propTypes validation?)
     minW = Math.max(minW, 1);
 
-    // maxW should be at most (cols - x)
-    maxW = Math.min(maxW, cols - x);
-
     // Min/max capping
     w = clamp(w, minW, maxW);
     h = clamp(h, minH, maxH);
 
-    this.setState({ resizing: handlerName === "onResizeStop" ? null : size });
+    const elem = ((node: any): HTMLElement);
+    if (elem) {
+      const currentLeft = position.left;
+      const currentTop = position.top;
+      const currentWidth = position.width;
+      const currentHeight = position.height;
 
-    handler.call(this, i, w, h, { e, node, size });
+      if (
+        [
+          "sw",
+          "w",
+          "nw",
+          "n",
+          "ne"
+        ].indexOf(handle) !== -1
+      ) {
+        if (["sw", "w"].indexOf(handle) !== -1) {
+          size.left = currentLeft - (size.width - currentWidth);
+          size.top = currentTop;
+        } else if (
+          ["n", "ne"].indexOf(handle) !== -1
+        ) {
+          size.left = currentLeft;
+          size.top = currentTop - (size.height - currentHeight);
+        } else {
+          size.left = currentLeft - (size.width - currentWidth);
+          size.top = currentTop - (size.height - currentHeight);
+        }
+        size.left = size.left < 0 ? 0 : size.left;
+        size.top = size.top < 0 ? 0 : size.top;
+      }
+      this.setState({ resizing: handlerName === "onResizeStop" ? null : size });
+    }
+
+    handler.call(this, i, w, h, { e, node, size, handle });
   }
 
   render(): ReactNode {

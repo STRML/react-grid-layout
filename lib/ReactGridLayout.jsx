@@ -47,6 +47,7 @@ type State = {
   oldDragItem: ?LayoutItem,
   oldLayout: ?Layout,
   oldResizeItem: ?LayoutItem,
+  resizing: boolean,
   droppingDOMNode: ?ReactElement<any>,
   droppingPosition?: DroppingPosition,
   // Mirrored props
@@ -132,6 +133,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     oldDragItem: null,
     oldLayout: null,
     oldResizeItem: null,
+    resizing: false,
     droppingDOMNode: null,
     children: []
   };
@@ -385,7 +387,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     this.setState({
       oldResizeItem: cloneLayoutItem(l),
-      oldLayout: this.state.layout
+      oldLayout: this.state.layout,
+      resizing: true
     });
 
     this.props.onResizeStart(layout, l, l, null, e, node);
@@ -395,9 +398,10 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     i,
     w,
     h,
-    { e, node }
+    { e, node, size, handle }
   ) => {
-    const { layout, oldResizeItem } = this.state;
+    const { oldResizeItem } = this.state;
+    let { layout } = this.state;
     const { cols, preventCollision, allowOverlap } = this.props;
 
     const [newLayout, l] = withLayoutItem(layout, i, l => {
@@ -425,14 +429,44 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         }
       }
 
-      if (!hasCollisions) {
-        // Set new width and height.
-        l.w = w;
-        l.h = h;
-      }
-
       return l;
     });
+    let finalLayout;
+    if (["sw","w","nw","n","ne"].indexOf(handle) !== -1) {
+      let x = l.x;
+      let y = l.y;
+      if (["sw","nw","w"].indexOf(handle) !== -1) {
+        x = l.x + (l.w - w);
+        w = l.x !== x && x < 0 ? l.w : w;
+        x = x < 0 ? 0 : x;
+      }
+
+      if (["ne","n","nw"].indexOf(handle) !== -1) {
+        y = l.y + (l.h - h);
+        h = l.y !== y && y < 0 ? l.h : h;
+        y = y < 0 ? 0 : y;
+      }
+
+      l.w = w;
+      l.h = h;
+      // Move the element to the new position.
+      const isUserAction = true;
+      finalLayout = moveElement(
+        newLayout,
+        l,
+        x,
+        y,
+        isUserAction,
+        this.props.preventCollision,
+        compactType(this.props),
+        cols,
+        allowOverlap
+      );
+    } else {
+      l.w = w;
+      l.h = h;
+      finalLayout = newLayout
+    }
 
     // Shouldn't ever happen, but typechecking makes it necessary
     if (!l) return;
@@ -447,13 +481,13 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       i: i
     };
 
-    this.props.onResize(newLayout, oldResizeItem, l, placeholder, e, node);
+    this.props.onResize(finalLayout, oldResizeItem, l, placeholder, e, node);
 
     // Re-compact the newLayout and set the drag placeholder.
     this.setState({
       layout: allowOverlap
-        ? newLayout
-        : compact(newLayout, compactType(this.props), cols),
+        ? finalLayout
+        : compact(finalLayout, compactType(this.props), cols),
       activeDrag: placeholder
     });
   };
@@ -479,7 +513,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       activeDrag: null,
       layout: newLayout,
       oldResizeItem: null,
-      oldLayout: null
+      oldLayout: null,
+      resizing: false
     });
 
     this.onLayoutMaybeChanged(newLayout, oldLayout);
@@ -511,7 +546,9 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         x={activeDrag.x}
         y={activeDrag.y}
         i={activeDrag.i}
-        className="react-grid-placeholder"
+        className={classNames("react-grid-placeholder", {
+          "placeholder-resizing": Boolean(this.state.resizing)
+        })}
         containerWidth={width}
         cols={cols}
         margin={margin}
