@@ -385,7 +385,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     this.setState({
       oldResizeItem: cloneLayoutItem(l),
-      oldLayout: this.state.layout
+      oldLayout: this.state.layout.map(layoutItem => cloneLayoutItem(layoutItem))
     });
 
     this.props.onResizeStart(layout, l, l, null, e, node);
