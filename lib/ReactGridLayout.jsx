@@ -721,6 +721,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
   onDragLeave: EventHandler = e => {
     e.preventDefault(); // Prevent any browser native action
+    e.stopPropagation();
     this.dragEnterCounter--;
 
     // onDragLeave can be triggered on each layout's child.
@@ -735,11 +736,13 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
   onDragEnter: EventHandler = e => {
     e.preventDefault(); // Prevent any browser native action
+    e.stopPropagation();
     this.dragEnterCounter++;
   };
 
   onDrop: EventHandler = (e: Event) => {
     e.preventDefault(); // Prevent any browser native action
+    e.stopPropagation();
     const { droppingItem } = this.props;
     const { layout } = this.state;
     const item = layout.find(l => l.i === droppingItem.i);
