@@ -117,6 +117,12 @@ Include the following stylesheets in your application:
 /node_modules/react-grid-layout/css/styles.css
 /node_modules/react-resizable/css/styles.css
 ```
+If using Create React App:
+
+```
+import 'react-grid-layout/css/styles.css' 
+import 'react-resizable/css/styles.css'
+```
 
 ## Usage
 
